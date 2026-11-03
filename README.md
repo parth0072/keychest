@@ -16,13 +16,13 @@ let client = APIClient(key: Secrets.Release().apiKey)
 
 ## Quick start
 
-Install (macOS 12+, Swift 5.9+):
+Install with [Homebrew](https://brew.sh) (builds from source, so Xcode 15+ is required):
 
 ```bash
-mint install parth0072/keychest
+brew install parth0072/tap/keychest
 ```
 
-or build from source:
+or build from source (macOS 12+, Swift 5.9+):
 
 ```bash
 git clone https://github.com/parth0072/keychest.git && cd keychest
@@ -125,7 +125,7 @@ Keychest protects against secrets being committed, shared by accident or read fr
 
 ## Roadmap
 
-White-label flavors, Kotlin output, Touch ID–gated Keychain items, more backends (Bitwarden, Vault, AWS), a Homebrew formula.
+White-label flavors, Kotlin output, Touch ID–gated Keychain items, more backends (Bitwarden, Vault, AWS), prebuilt binaries so Xcode isn't needed to install.
 
 ## Contributing
 
