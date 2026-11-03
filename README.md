@@ -77,6 +77,17 @@ Secrets.Release().apiKey
 
 Generated code is git-ignored automatically (a `.gitignore` is written into the output folder).
 
+### Step-by-step walkthrough
+
+1. **Install** the `keychest` binary (see [Install](#install)) and check it with `keychest --help`.
+2. **Create the config** in your app's root folder: `keychest init`. Edit `.keychest.yml` and list your secret *names* (never values). The file is safe to commit.
+3. **Store values.** With the `keychain` backend run `keychest set <name>` for each secret; you are prompted with echo off. With the `env` backend, export variables named like the keys (`apiKeyDebug`, `apiKeyRelease`, `clientID`).
+4. **Check.** `keychest check` lists what is present or missing and never prints values.
+5. **Generate.** `keychest generate` writes the `KeychestKeys` Swift package (obfuscated, no plaintext, git-ignored).
+6. **Add to Xcode.** *File → Add Package Dependencies… → Add Local…*, pick the `KeychestKeys` folder, and link it to your app target.
+7. **Use it.** `import KeychestKeys`, then `Secrets.Debug().apiKey`.
+8. **Re-run `keychest generate`** whenever a secret changes. On CI, use the `env` backend (see [Continuous integration](#continuous-integration)).
+
 ### Using the protocols for DI and tests
 
 ```swift
