@@ -1,0 +1,18 @@
+# Example: Keychain backend, two build configurations.
+backend: keychain
+service: com.example.myapp
+
+environments:
+  - Debug
+  - Release
+
+environment_secrets:
+  - apiKey          # stored as apiKeyDebug / apiKeyRelease
+
+global_secrets:
+  - analyticsToken  # stored as analyticsToken
+
+output:
+  path: KeychestKeys
+  package_name: KeychestKeys
+  type_name: Secrets

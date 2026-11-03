@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build
+      - name: Unit tests
+        run: swift test
+      - name: Keychain integration tests (throwaway keychain)
+        env:
+          KEYCHEST_KEYCHAIN_TESTS: "1"
+        run: |
+          security create-keychain -p ci ci.keychain
+          security set-keychain-settings -lut 3600 ci.keychain
+          security unlock-keychain -p ci ci.keychain
+          security list-keychains -d user -s ci.keychain
+          security default-keychain -s ci.keychain
+          swift test --filter KeychainBackendIntegrationTests
+      - name: End-to-end (generate, compile, round-trip)
+        run: Scripts/e2e.sh
+
+  linux:
+    # The core (config, obfuscation, code generation) is platform independent.
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: swift test
+      - name: End-to-end
+        run: Scripts/e2e.sh

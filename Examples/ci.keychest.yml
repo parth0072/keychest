@@ -1,0 +1,12 @@
+# Example: same key names, but values come from CI-provided environment variables.
+# Use with: keychest generate --config Examples/ci.keychest.yml
+backend: env
+
+environments:
+  - Release
+
+environment_secrets:
+  - apiKey          # read from $apiKeyRelease
+
+global_secrets:
+  - analyticsToken  # read from $analyticsToken
