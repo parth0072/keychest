@@ -123,10 +123,14 @@ In Xcode, run `keychest generate` before building (terminal, fastlane or a pre-b
 
 Keychest protects against secrets being committed, shared by accident or read from your source tree. It does not make them unrecoverable from a shipped app, so keep truly sensitive credentials on a server. The generated folder holds the encoded values next to their salt: keep it git-ignored (the default) and out of reach of AI assistants, as described in [docs/AI_ASSISTANTS.md](docs/AI_ASSISTANTS.md). Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
-## More
+## Roadmap
 
-Inspired by [Arkana](https://github.com/rogerluan/arkana) and uses its naming (`apiKey` + `Debug` → `apiKeyDebug`). Choose Arkana if you need Kotlin output, white-label flavors or CocoaPods.
+White-label flavors, Kotlin output, Touch ID–gated Keychain items, more backends (Bitwarden, Vault, AWS), a Homebrew formula.
 
-Roadmap: white-label flavors, Kotlin output, Touch ID–gated Keychain items, more backends (Bitwarden, Vault, AWS), a Homebrew formula.
+## Contributing
 
-Contributions are welcome: [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [MIT](LICENSE).
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+Keychest is released under the [MIT License](LICENSE). Copyright (c) 2026 Parth Kshatriya.
