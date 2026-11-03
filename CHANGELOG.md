@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-03
+
 ### Added
 - Initial release: `init`, `set`, `remove`, `generate`, `check` commands.
 - Backends: macOS Keychain, environment variables (CI), 1Password CLI (read-only).

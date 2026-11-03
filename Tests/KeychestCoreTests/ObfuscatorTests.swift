@@ -5,7 +5,7 @@ final class ObfuscatorTests: XCTestCase {
     func testRoundTrip() {
         for value in ["", "a", "sk_live_abc123", "p@ss $word \\ \" ' `", "héllo 🔑 世界", String(repeating: "x", count: 500)] {
             let encoded = Obfuscator.encode(value, salt: fixedSalt)
-            XCTAssertEqual(Obfuscator.decode(encoded, salt: fixedSalt), value)
+            XCTAssertEqual(decode(encoded, salt: fixedSalt), value)
         }
     }
 

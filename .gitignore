@@ -4,7 +4,6 @@
 /*.xcodeproj
 xcuserdata/
 DerivedData/
-Package.resolved.bak
 
 # Never commit real values or generated output from running Keychest in this repo
 /KeychestKeys/

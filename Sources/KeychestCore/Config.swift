@@ -2,7 +2,7 @@ import Foundation
 import Yams
 
 /// Where secret values are fetched from at generation time.
-public enum BackendKind: String, Codable, CaseIterable {
+public enum BackendKind: String, Decodable {
     case keychain
     case env
     case onepassword = "1password"
@@ -32,7 +32,7 @@ public struct Config: Equatable {
         }
     }
 
-    public struct OnePassword: Equatable {
+    public struct OnePassword: Equatable, Decodable {
         public var vault: String
         public var item: String
         public init(vault: String, item: String) {
@@ -89,18 +89,11 @@ extension Config: Decodable {
         }
     }
 
-    private struct OnePasswordDTO: Decodable {
-        var vault: String
-        var item: String
-    }
-
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.backend = try c.decodeIfPresent(BackendKind.self, forKey: .backend) ?? .keychain
         self.service = try c.decodeIfPresent(String.self, forKey: .service)
-        if let op = try c.decodeIfPresent(OnePasswordDTO.self, forKey: .onepassword) {
-            self.onePassword = OnePassword(vault: op.vault, item: op.item)
-        }
+        self.onePassword = try c.decodeIfPresent(OnePassword.self, forKey: .onepassword)
         self.environments = try c.decodeIfPresent([String].self, forKey: .environments) ?? []
         self.environmentSecrets = try c.decodeIfPresent([String].self, forKey: .environmentSecrets) ?? []
         self.globalSecrets = try c.decodeIfPresent([String].self, forKey: .globalSecrets) ?? []
