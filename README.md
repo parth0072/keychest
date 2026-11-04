@@ -10,7 +10,7 @@ import KeychestKeys
 let client = APIClient(key: Secrets.Release().apiKey)
 ```
 
-> **Work in progress.** Keychest is in early development (v0.x), so you may hit bugs or things that don't work yet. If something breaks, please [open an issue](https://github.com/parth0072/keychest/issues/new/choose) with the command you ran and the error output (never paste real secret values) and we'll take a look.
+> **Work in progress.** Keychest is still young, so you may hit bugs or things that don't work yet. If something breaks, please [open an issue](https://github.com/parth0072/keychest/issues/new/choose) with the command you ran and the error output (never paste real secret values) and we'll take a look.
 
 > **Know the limits.** Anything shipped inside an app can be extracted by a determined attacker. Keychest obfuscates values so they don't show up in `strings`, but its real value is keeping secrets out of your source tree and git history. See the [threat model](docs/THREAT_MODEL.md).
 
