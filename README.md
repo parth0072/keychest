@@ -127,7 +127,16 @@ Keychest protects against secrets being committed, shared by accident or read fr
 
 ## Roadmap
 
-White-label flavors, Kotlin output, Touch ID–gated Keychain items, more backends (Bitwarden, Vault, AWS), prebuilt binaries so Xcode isn't needed to install.
+Planned, with no dates yet. Ideas and PRs are welcome.
+
+- **Android support**
+  - Kotlin output: generate a Gradle module with obfuscated accessors and interfaces for tests, mirroring the Swift package
+  - Map Android build types and product flavors to Keychest environments, so one `.keychest.yml` can serve iOS and Android
+  - A Gradle task that runs `keychest generate` before builds
+- White-label flavors
+- Touch ID–gated Keychain items
+- More backends (Bitwarden, Vault, AWS)
+- Prebuilt binaries so Xcode isn't needed to install
 
 ## Contributing
 
