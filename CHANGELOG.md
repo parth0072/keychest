@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `Examples/keychest-sample`: a SwiftUI sample app that uses Keychest.
+
 ## [0.1.0] - 2026-11-03
 
 ### Added

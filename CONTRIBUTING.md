@@ -26,7 +26,7 @@ Sources/keychest/       command-line interface (swift-argument-parser)
 Tests/KeychestCoreTests unit tests, in-memory backend for fakes
 Scripts/e2e.sh          end-to-end check used by CI
 docs/                   threat model, assistant guidance
-Examples/               sample configs
+Examples/               sample configs and an Xcode sample app
 ```
 
 ## Adding a backend

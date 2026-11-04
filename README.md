@@ -45,6 +45,8 @@ Secrets.Debug().apiKey            // per-environment secret
 Secrets.Global().analyticsToken   // shared by every environment
 ```
 
+A complete SwiftUI app is in [`Examples/keychest-sample`](Examples/keychest-sample).
+
 Re-run `keychest generate` whenever a secret changes. For tests, depend on the generated protocol instead of the concrete type:
 
 ```swift
