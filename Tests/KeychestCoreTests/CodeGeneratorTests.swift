@@ -65,6 +65,13 @@ final class CodeGeneratorTests: XCTestCase {
         XCTAssertFalse(source.contains("EnvironmentProtocol"))
     }
 
+    func testEnvironmentsWithoutEnvironmentSecretsDoNotReferenceAMissingProtocol() throws {
+        let files = try generate(secrets: ["a": "1"], yaml: "backend: env\nenvironments: [Debug, Release]\nglobal_secrets: [a]")
+        let source = try XCTUnwrap(files.first { $0.path.hasSuffix("Secrets.swift") }).contents
+        XCTAssertFalse(source.contains("EnvironmentProtocol"))
+        XCTAssertFalse(source.contains("struct Debug"))
+    }
+
     func testWriterWritesFilesAndLeavesOthersAlone() throws {
         let dir = NSTemporaryDirectory() + "keychest-\(UUID().uuidString)"
         defer { try? FileManager.default.removeItem(atPath: dir) }

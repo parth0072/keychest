@@ -35,5 +35,14 @@ public enum ConfigTemplate {
       type_name: Secrets          # top-level namespace: Secrets.Debug().apiKey
       gitignore: true             # write a .gitignore so generated code is never committed
 
+    # Which code to generate: swift, kotlin (default: swift).
+    # platforms: [swift, kotlin]
+
+    # kotlin:                     # Android / JVM: a Gradle module you depend on
+    #   path: keychest-keys
+    #   package: com.example.keys
+    #   type_name: Secrets
+    #   gitignore: true
+
     """
 }

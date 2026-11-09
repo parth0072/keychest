@@ -2,7 +2,7 @@
 
 **Keep app secrets out of your repo and your project folder.**
 
-Keychest pulls API keys from the macOS Keychain (or 1Password, or CI environment variables) at build time and generates a small Swift package your app imports. Real values never touch git, and there is no `.env` file for editors, scripts or AI assistants to find.
+Keychest pulls API keys from the macOS Keychain (or 1Password, or CI environment variables) at build time and generates a small Swift package (or a Kotlin module for Android) your app imports. Real values never touch git, and there is no `.env` file for editors, scripts or AI assistants to find.
 
 ```swift
 import KeychestKeys
@@ -54,6 +54,40 @@ func makeClient(_ secrets: SecretsEnvironmentProtocol) -> APIClient { APIClient(
 struct FakeSecrets: SecretsEnvironmentProtocol { let apiKey = "test-key" }
 ```
 
+## Android
+
+The same `.keychest.yml` can also generate a Kotlin module for Android (or any JVM) projects. Choose the platform and, optionally, where the module goes:
+
+```yaml
+platforms: [swift, kotlin]   # or just [kotlin]
+kotlin:
+  path: keychest-keys
+  package: com.example.keys
+```
+
+Run `keychest generate`, then add the module to your Gradle build:
+
+```kotlin
+// settings.gradle.kts
+include(":keychest-keys")
+
+// app/build.gradle.kts
+dependencies { implementation(project(":keychest-keys")) }
+```
+
+The module applies the Kotlin plugin without a version, so declare it once in your root `build.gradle.kts`: `id("org.jetbrains.kotlin.jvm") version "<your Kotlin version>" apply false`. Then use it like the Swift one:
+
+```kotlin
+import com.example.keys.Secrets
+import com.example.keys.SecretsEnvironment
+
+val secrets: SecretsEnvironment = if (BuildConfig.DEBUG) Secrets.Debug else Secrets.Release
+val apiKey = secrets.apiKey
+val clientID = Secrets.Global.clientID
+```
+
+`BuildConfig` needs `buildFeatures { buildConfig = true }` on recent Android Gradle plugins. Values are obfuscated, not encrypted: tools such as jadx can recover them from an APK.
+
 ## How it works
 
 ```
@@ -61,7 +95,7 @@ Keychain / 1Password / env  ──▶  keychest generate  ──▶  KeychestKey
 real values, never in git        XOR + random salt        decoded on access in your app
 ```
 
-`.keychest.yml` lists secret *names* only. Each run uses a fresh random salt, and the generated package has no dependencies.
+`.keychest.yml` lists secret *names* only. Each run uses a fresh random salt, and the generated code has no dependencies.
 
 ## Configuration
 
@@ -82,6 +116,11 @@ output:                           # optional
   package_name: KeychestKeys      # what you `import`
   type_name: Secrets
   gitignore: true
+
+platforms: [swift]                # swift, kotlin or both
+kotlin:                           # used when platforms includes kotlin
+  path: keychest-keys
+  package: com.example.keys
 ```
 
 Names use ASCII letters, digits and underscores and start with a letter; `Global` is reserved. More in [`Examples/`](Examples).
@@ -94,7 +133,7 @@ Names use ASCII letters, digits and underscores and start with a letter; `Global
 | `keychest set <name> [-e Env]` | Store a secret via a hidden prompt, or `--stdin` for scripts. The value is never a command-line argument. |
 | `keychest remove <name> [-e Env]` | Delete a secret from the backend. |
 | `keychest check` | List present and missing secrets. Exits `1` if any are missing. |
-| `keychest generate [--output DIR]` | Fetch secrets and write the Swift package. Reports every missing secret at once. |
+| `keychest generate [--platforms swift,kotlin] [--output DIR]` | Fetch secrets and write the Swift package and/or Kotlin module. Reports every missing secret at once. |
 
 `check` and `generate` take `--environments Debug,Release` to limit which environments are read, which keeps Release secrets off developer machines. Every command takes `-c/--config <path>`.
 
@@ -129,8 +168,8 @@ Keychest protects against secrets being committed, shared by accident or read fr
 
 Planned, with no dates yet. Ideas and PRs are welcome.
 
-- **Android support**
-  - Kotlin output: generate a Gradle module with obfuscated accessors and interfaces for tests, mirroring the Swift package
+- **More Android support** (Kotlin output is already here)
+  - A sample Android app
   - Map Android build types and product flavors to Keychest environments, so one `.keychest.yml` can serve iOS and Android
   - A Gradle task that runs `keychest generate` before builds
 - White-label flavors

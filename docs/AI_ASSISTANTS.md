@@ -9,7 +9,7 @@ Goal: let an assistant work on your app without being able to read your real sec
 
 ## What you should still lock down
 
-1. **The generated folder** (`KeychestKeys/` by default). Values are encoded, but the salt is next to them, so decoding is trivial.
+1. **The generated folder** (`KeychestKeys/` by default, `keychest-keys/` for Kotlin). Values are encoded, but the salt is next to them, so decoding is trivial.
 2. **Shell access to the secret stores.** An assistant that can run commands can run `security find-generic-password -w`, `op read`, or `keychest generate`.
 
 ## Claude Code example
@@ -21,6 +21,7 @@ Goal: let an assistant work on your app without being able to read your real sec
   "permissions": {
     "deny": [
       "Read(./KeychestKeys/**)",
+      "Read(./keychest-keys/**)",
       "Read(./.env)",
       "Read(./.env.*)",
       "Bash(security *)",

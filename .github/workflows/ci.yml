@@ -27,6 +27,21 @@ jobs:
       - name: End-to-end (generate, compile, round-trip)
         run: Scripts/e2e.sh
 
+  kotlin:
+    # Generates the Kotlin module and builds it with Gradle.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.8.2"
+      - name: End-to-end (generate, Gradle build, round-trip)
+        run: Scripts/e2e-kotlin.sh
+
   linux:
     # The core (config, obfuscation, code generation) is platform independent.
     runs-on: ubuntu-latest

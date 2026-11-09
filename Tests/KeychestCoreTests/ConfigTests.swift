@@ -68,6 +68,46 @@ final class ConfigTests: XCTestCase {
         XCTAssertEqual(config.requiredAccounts(environments: ["Debug"]), ["clientID", "apiKeyDebug"])
     }
 
+    func testPlatformsDefaultToSwiftAndKotlinHasDefaults() throws {
+        let config = try Config.parse(sampleYAML)
+        XCTAssertEqual(config.platforms, [.swift])
+        XCTAssertEqual(config.kotlin, Config.Kotlin())
+    }
+
+    func testParsesPlatformsAndKotlinSettings() throws {
+        let config = try Config.parse(sampleYAML + """
+
+        platforms: [swift, kotlin]
+        kotlin:
+          path: android/keys
+          package: com.acme.app.keys
+          type_name: Keys
+          gitignore: false
+        """)
+        XCTAssertEqual(config.platforms, [.swift, .kotlin])
+        XCTAssertEqual(config.kotlin, Config.Kotlin(path: "android/keys", packageName: "com.acme.app.keys",
+                                                    typeName: "Keys", gitignore: false))
+    }
+
+    func testRejectsUnknownEmptyOrDuplicatePlatforms() {
+        for platforms in ["[java]", "[]", "[kotlin, kotlin]"] {
+            XCTAssertThrowsError(try Config.parse(sampleYAML + "\nplatforms: \(platforms)"), platforms)
+        }
+    }
+
+    func testUnknownPlatformMessageIsReadable() {
+        XCTAssertThrowsError(try Config.parse(sampleYAML + "\nplatforms: [java]")) { error in
+            XCTAssertEqual(error as? KeychestError, .invalidConfig("Unknown platform 'java'. Use swift or kotlin."))
+        }
+    }
+
+    func testRejectsInvalidKotlinSettings() {
+        for setting in ["package: com..keys", "package: 1com.keys", "package: com.example.class",
+                        "package: com.example.new", "type_name: object", "type_name: 'my-type'"] {
+            XCTAssertThrowsError(try Config.parse(sampleYAML + "\nkotlin:\n  \(setting)"), setting)
+        }
+    }
+
     func testMissingFileReportsNotFound() {
         XCTAssertThrowsError(try Config.load(from: "/definitely/not/here.yml")) { error in
             XCTAssertEqual(error as? KeychestError, .configNotFound("/definitely/not/here.yml"))

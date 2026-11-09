@@ -8,6 +8,22 @@ public enum BackendKind: String, Decodable {
     case onepassword = "1password"
 }
 
+/// Which language the generated code is written in.
+public enum Platform: String, Equatable {
+    case swift
+    case kotlin
+
+    /// Parses names such as `swift` and `kotlin`, rejecting anything else with a readable message.
+    public static func parse(_ names: [String]) throws -> [Platform] {
+        try names.map { name in
+            guard let platform = Platform(rawValue: name) else {
+                throw KeychestError.invalidConfig("Unknown platform '\(name)'. Use swift or kotlin.")
+            }
+            return platform
+        }
+    }
+}
+
 /// Parsed `.keychest.yml`. The config only ever contains key *names*, never values,
 /// so it is safe to commit.
 public struct Config: Equatable {
@@ -41,6 +57,27 @@ public struct Config: Equatable {
         }
     }
 
+    public struct Kotlin: Equatable {
+        /// Directory the generated Gradle module is written to.
+        public var path: String
+        /// Package of the generated code, e.g. `com.example.keys`.
+        public var packageName: String
+        /// Name of the top-level generated object, e.g. `Secrets`.
+        public var typeName: String
+        /// Write a `.gitignore` into the output directory so generated code is never committed.
+        public var gitignore: Bool
+
+        public init(path: String = "keychest-keys",
+                    packageName: String = "keychest.keys",
+                    typeName: String = "Secrets",
+                    gitignore: Bool = true) {
+            self.path = path
+            self.packageName = packageName
+            self.typeName = typeName
+            self.gitignore = gitignore
+        }
+    }
+
     public var backend: BackendKind
     /// Keychain service name (keychain backend only). Reverse-DNS is recommended.
     public var service: String?
@@ -52,6 +89,10 @@ public struct Config: Equatable {
     /// Secrets shared by every environment. Stored as `<key>`.
     public var globalSecrets: [String]
     public var output: Output
+    /// Languages to generate code for. Defaults to Swift only.
+    public var platforms: [Platform]
+    /// Settings for the Kotlin (Android / JVM) module, used when `platforms` includes `kotlin`.
+    public var kotlin: Kotlin
 
     public init(backend: BackendKind = .keychain,
                 service: String? = nil,
@@ -59,7 +100,9 @@ public struct Config: Equatable {
                 environments: [String] = [],
                 environmentSecrets: [String] = [],
                 globalSecrets: [String] = [],
-                output: Output = Output()) {
+                output: Output = Output(),
+                platforms: [Platform] = [.swift],
+                kotlin: Kotlin = Kotlin()) {
         self.backend = backend
         self.service = service
         self.onePassword = onePassword
@@ -67,12 +110,14 @@ public struct Config: Equatable {
         self.environmentSecrets = environmentSecrets
         self.globalSecrets = globalSecrets
         self.output = output
+        self.platforms = platforms
+        self.kotlin = kotlin
     }
 }
 
 extension Config: Decodable {
     private enum CodingKeys: String, CodingKey {
-        case backend, service, onepassword, environments, output
+        case backend, service, onepassword, environments, output, platforms, kotlin
         case environmentSecrets = "environment_secrets"
         case globalSecrets = "global_secrets"
     }
@@ -85,6 +130,18 @@ extension Config: Decodable {
         enum CodingKeys: String, CodingKey {
             case path, gitignore
             case packageName = "package_name"
+            case typeName = "type_name"
+        }
+    }
+
+    private struct KotlinDTO: Decodable {
+        var path: String?
+        var packageName: String?
+        var typeName: String?
+        var gitignore: Bool?
+        enum CodingKeys: String, CodingKey {
+            case path, gitignore
+            case packageName = "package"
             case typeName = "type_name"
         }
     }
@@ -108,6 +165,22 @@ extension Config: Decodable {
         } else {
             self.output = defaults
         }
+        if let names = try c.decodeIfPresent([String].self, forKey: .platforms) {
+            self.platforms = try Platform.parse(names)
+        } else {
+            self.platforms = [.swift]
+        }
+        let kotlinDefaults = Kotlin()
+        if let k = try c.decodeIfPresent(KotlinDTO.self, forKey: .kotlin) {
+            self.kotlin = Kotlin(
+                path: k.path ?? kotlinDefaults.path,
+                packageName: k.packageName ?? kotlinDefaults.packageName,
+                typeName: k.typeName ?? kotlinDefaults.typeName,
+                gitignore: k.gitignore ?? kotlinDefaults.gitignore
+            )
+        } else {
+            self.kotlin = kotlinDefaults
+        }
     }
 }
 
@@ -128,6 +201,14 @@ extension Config {
         let config: Config
         do {
             config = try YAMLDecoder().decode(Config.self, from: yaml)
+        } catch let error as KeychestError {
+            throw error
+        } catch let error as DecodingError {
+            // Yams wraps errors thrown while decoding; surface ours unchanged.
+            if case .dataCorrupted(let context) = error, let inner = context.underlyingError as? KeychestError {
+                throw inner
+            }
+            throw KeychestError.invalidConfig("\(error)")
         } catch {
             throw KeychestError.invalidConfig("\(error)")
         }
@@ -155,6 +236,13 @@ extension Config {
 
         try Naming.validate(output.packageName)
         try Naming.validate(output.typeName)
+
+        if platforms.isEmpty {
+            throw KeychestError.invalidConfig("`platforms` must list at least one of: swift, kotlin.")
+        }
+        try Self.requireUnique(platforms.map(\.rawValue), label: "platform")
+        try Naming.validatePackage(kotlin.packageName)
+        try Naming.validateKotlinTypeName(kotlin.typeName)
 
         switch backend {
         case .keychain:

@@ -1,0 +1,15 @@
+# Example: generate a Swift package and a Kotlin (Android) module from the same config.
+# Use `platforms: [kotlin]` for an Android-only project.
+backend: keychain
+service: com.example.myapp
+
+platforms: [swift, kotlin]
+
+environments: [Debug, Release]
+environment_secrets: [apiKey]      # stored as apiKeyDebug / apiKeyRelease
+global_secrets: [analyticsToken]   # stored as analyticsToken
+
+kotlin:
+  path: android/keychest-keys      # Gradle module folder, relative to where you run keychest
+  package: com.example.keys
+  type_name: Secrets

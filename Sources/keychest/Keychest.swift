@@ -56,6 +56,11 @@ func splitList(_ value: String?) -> [String]? {
     return value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
 }
 
+/// `android/keychest-keys` -> `:android:keychest-keys`, the Gradle path of a module folder.
+func gradleProject(for directory: String) -> String {
+    ":" + directory.split(separator: "/").filter { $0 != "." }.joined(separator: ":")
+}
+
 // MARK: - init
 
 extension Keychest {
@@ -187,14 +192,17 @@ extension Keychest {
 extension Keychest {
     struct Generate: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Fetch secrets and generate the Swift package.")
+            abstract: "Fetch secrets and generate the Swift package and/or Kotlin module.")
 
         @OptionGroup var options: ConfigOptions
 
         @Option(help: "Comma-separated environments to include, e.g. Debug. Defaults to all. Useful to keep Release secrets off dev machines.")
         var environments: String?
 
-        @Option(name: .customLong("output"), help: "Override the output directory from the config.")
+        @Option(help: "Comma-separated platforms to generate: swift, kotlin. Defaults to `platforms` in the config (swift if unset).")
+        var platforms: String?
+
+        @Option(name: .customLong("output"), help: "Override the output directory from the config. Only valid when generating one platform.")
         var outputPath: String?
 
         func run() throws {
@@ -202,15 +210,36 @@ extension Keychest {
                 let config = try options.load()
                 let backend = try BackendFactory.make(for: config)
                 let only = splitList(environments)
+                var seen = Swift.Set<Platform>()
+                let targets = (try splitList(platforms).map(Platform.parse) ?? config.platforms)
+                    .filter { seen.insert($0).inserted }
+                guard !targets.isEmpty else {
+                    throw KeychestError.invalidConfig("No platforms selected. Use swift, kotlin or both.")
+                }
+                if outputPath != nil && targets.count > 1 {
+                    throw KeychestError.invalidConfig("--output can only be used with one platform. Pass --platforms swift or --platforms kotlin.")
+                }
 
                 let resolved = try SecretResolver.resolve(config: config, backend: backend, environments: only)
-                let files = CodeGenerator(config: config).generate(from: resolved)
-                let directory = outputPath ?? config.output.path
-                let written = try OutputWriter.write(files, to: directory)
-
-                print("Generated \(config.output.packageName) in \(directory) from \(backend.name):")
-                written.forEach { print("  \($0)") }
-                print("Add it as a local Swift package and `import \(config.output.packageName)`.")
+                for platform in targets {
+                    switch platform {
+                    case .swift:
+                        let directory = outputPath ?? config.output.path
+                        let files = CodeGenerator(config: config).generate(from: resolved)
+                        let written = try OutputWriter.write(files, to: directory)
+                        print("Generated \(config.output.packageName) (Swift) in \(directory) from \(backend.name):")
+                        written.forEach { print("  \($0)") }
+                        print("Add it as a local Swift package and `import \(config.output.packageName)`.")
+                    case .kotlin:
+                        let directory = outputPath ?? config.kotlin.path
+                        let files = KotlinCodeGenerator(config: config).generate(from: resolved)
+                        let written = try OutputWriter.write(files, to: directory)
+                        let module = gradleProject(for: directory)
+                        print("Generated \(config.kotlin.packageName) (Kotlin) in \(directory) from \(backend.name):")
+                        written.forEach { print("  \($0)") }
+                        print("Add `include(\"\(module)\")` to settings.gradle.kts and depend on it with `implementation(project(\"\(module)\"))`.")
+                    }
+                }
             }
         }
     }

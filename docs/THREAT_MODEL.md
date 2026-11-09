@@ -15,6 +15,7 @@ Keychest is a convenience and hygiene tool. It is deliberately honest about what
 ## What Keychest does **not** protect against
 
 - **A determined attacker with your app.** The decoder and salt ship in the binary. Anyone with a debugger, Frida or a disassembler can recover the values. XOR is obfuscation, not encryption. This is true of every client-side secret scheme, including Arkana and cocoapods-keys.
+- **A decompiled Android app.** The Kotlin decoder and salt ship in the app's dex files, and tools such as jadx can recover the values. Code shrinking and renaming with R8 do not change that.
 - **Malware or a malicious process running as you.** Any process running as your user can ask the Keychain for items once it is unlocked (macOS may prompt, depending on the item's access control).
 - **The generated folder.** It contains the encoded values and the salt side by side, so anyone who can read it can decode it. Treat it like a secret: git-ignored, not shared, and denied to AI tools.
 - **Compromised CI.** Whoever controls the CI job can read the secrets it injects.
