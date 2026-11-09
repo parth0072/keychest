@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-09
+
 ### Added
 - Kotlin output for Android and other JVM projects: `platforms: [swift, kotlin]` and a `kotlin:` block in `.keychest.yml`, a `--platforms` option for `keychest generate`, and a generated Gradle module with the same API shape as the Swift package.
 - `Examples/kotlin.keychest.yml` and a Gradle end-to-end check, `Scripts/e2e-kotlin.sh`.
