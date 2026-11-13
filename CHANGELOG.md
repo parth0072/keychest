@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-13
+
 ### Added
 - A prebuilt universal (arm64 + x86_64) macOS binary is attached to every release by a new Release workflow, and the Homebrew formula installs it, so installing no longer builds from source or needs Xcode.
 
