@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- A prebuilt universal (arm64 + x86_64) macOS binary is attached to every release by a new Release workflow, and the Homebrew formula installs it, so installing no longer builds from source or needs Xcode.
+
 ### Changed
 - Keys written in SCREAMING_SNAKE_CASE now generate idiomatic camelCase properties: `API_KEY` becomes `apiKey` and `MAPS_API_KEY` becomes `mapsApiKey`. They used to become `aPI_KEY` and `mAPS_API_KEY`, so update any call sites that used the old names. Keys that contain lowercase letters keep their names.
 

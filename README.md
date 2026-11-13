@@ -16,13 +16,13 @@ let client = APIClient(key: Secrets.Release().apiKey)
 
 ## Quick start
 
-Install with [Homebrew](https://brew.sh) (builds from source, so Xcode 15+ is required):
+Install with [Homebrew](https://brew.sh). It downloads a prebuilt universal binary (macOS 12+), so you don't need Xcode:
 
 ```bash
 brew install parth0072/tap/keychest
 ```
 
-or build from source (macOS 12+, Swift 5.9+):
+or download `keychest-<version>-macos-universal.tar.gz` from the [latest release](https://github.com/parth0072/keychest/releases/latest), unpack it and put `keychest` on your `PATH` (if macOS blocks a binary downloaded in a browser, run `xattr -d com.apple.quarantine keychest` once), or build from source (macOS 12+, Swift 5.9+):
 
 ```bash
 git clone https://github.com/parth0072/keychest.git && cd keychest
@@ -175,7 +175,7 @@ Planned, with no dates yet. Ideas and PRs are welcome.
 - White-label flavors
 - Touch ID–gated Keychain items
 - More backends (Bitwarden, Vault, AWS)
-- Prebuilt binaries so Xcode isn't needed to install
+- Prebuilt Linux binaries
 
 ## Contributing
 
