@@ -6,6 +6,12 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Keys written in SCREAMING_SNAKE_CASE now generate idiomatic camelCase properties: `API_KEY` becomes `apiKey` and `MAPS_API_KEY` becomes `mapsApiKey`. They used to become `aPI_KEY` and `mAPS_API_KEY`, so update any call sites that used the old names. Keys that contain lowercase letters keep their names.
+
+### Fixed
+- Keys that would become the same property (for example `Foo` and `foo`, or `API_KEY` and `apiKey`) are now rejected with a clear message instead of generating code that does not compile.
+
 ## [1.1.0] - 2026-11-09
 
 ### Added

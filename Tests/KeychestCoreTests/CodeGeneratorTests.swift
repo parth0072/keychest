@@ -65,6 +65,16 @@ final class CodeGeneratorTests: XCTestCase {
         XCTAssertFalse(source.contains("EnvironmentProtocol"))
     }
 
+    func testScreamingSnakeCaseKeysBecomeCamelCaseProperties() throws {
+        let files = try generate(secrets: ["MAPS_API_KEY": "m", "API_TOKENDebug": "t"],
+                                 yaml: "backend: env\nenvironments: [Debug]\nenvironment_secrets: [API_TOKEN]\nglobal_secrets: [MAPS_API_KEY]")
+        let source = try XCTUnwrap(files.first { $0.path.hasSuffix("Secrets.swift") }).contents
+        XCTAssertTrue(source.contains("public var mapsApiKey: String"))
+        XCTAssertTrue(source.contains("public var apiToken: String"))
+        XCTAssertFalse(source.contains("mAPS_API_KEY"))
+        XCTAssertFalse(source.contains("aPI_TOKEN"))
+    }
+
     func testEnvironmentsWithoutEnvironmentSecretsDoNotReferenceAMissingProtocol() throws {
         let files = try generate(secrets: ["a": "1"], yaml: "backend: env\nenvironments: [Debug, Release]\nglobal_secrets: [a]")
         let source = try XCTUnwrap(files.first { $0.path.hasSuffix("Secrets.swift") }).contents

@@ -21,18 +21,18 @@ backend: env
 platforms: [kotlin]
 environments: [Debug, Release]
 environment_secrets: [apiKey]
-global_secrets: [clientID]
+global_secrets: [clientID, MAPS_API_KEY]
 kotlin:
   path: keychest-keys
   package: com.example.keys
 YAML
 
-export clientID='cid-ünï-$p€cial "q" \ ` x 🔑' apiKeyDebug=dbg-key-123 apiKeyRelease=rel-key-456
+export clientID='cid-ünï-$p€cial "q" \ ` x 🔑' apiKeyDebug=dbg-key-123 apiKeyRelease=rel-key-456 MAPS_API_KEY=maps-key-789
 
 "$BIN" check
 "$BIN" generate
 
-if grep -rE "dbg-key-123|rel-key-456|cid-" keychest-keys; then
+if grep -rE "dbg-key-123|rel-key-456|maps-key-789|cid-" keychest-keys; then
   echo "FAIL: plaintext secret found in generated code" >&2
   exit 1
 fi
@@ -81,12 +81,13 @@ fun main() {
     show(Secrets.Global.clientID)
     show(Secrets.Debug.apiKey)
     show(Secrets.Release.apiKey)
+    show(Secrets.Global.mapsApiKey)
 }
 KT
 
 ACTUAL="$(gradle --no-daemon --console=plain -q :consumer:run)"
 b64() { printf '%s' "$1" | base64 | tr -d '\n'; }
-EXPECTED="$(printf '%s\n%s\n%s' "$(b64 "$clientID")" "$(b64 "$apiKeyDebug")" "$(b64 "$apiKeyRelease")")"
+EXPECTED="$(printf '%s\n%s\n%s\n%s' "$(b64 "$clientID")" "$(b64 "$apiKeyDebug")" "$(b64 "$apiKeyRelease")" "$(b64 "$MAPS_API_KEY")")"
 if [ "$ACTUAL" != "$EXPECTED" ]; then
   echo "FAIL: decoded values differ from originals" >&2
   echo "expected: $EXPECTED" >&2

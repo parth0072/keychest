@@ -15,15 +15,15 @@ cat > .keychest.yml <<'YAML'
 backend: env
 environments: [Debug, Release]
 environment_secrets: [apiKey]
-global_secrets: [clientID]
+global_secrets: [clientID, MAPS_API_KEY]
 YAML
 
-export clientID='cid-ünï-$p€cial "q" \ ` x' apiKeyDebug=dbg-key-123 apiKeyRelease=rel-key-456
+export clientID='cid-ünï-$p€cial "q" \ ` x' apiKeyDebug=dbg-key-123 apiKeyRelease=rel-key-456 MAPS_API_KEY=maps-key-789
 
 "$BIN" check
 "$BIN" generate
 
-if grep -rE "dbg-key-123|rel-key-456|cid-" KeychestKeys; then
+if grep -rE "dbg-key-123|rel-key-456|maps-key-789|cid-" KeychestKeys; then
   echo "FAIL: plaintext secret found in generated code" >&2
   exit 1
 fi
@@ -44,10 +44,11 @@ import KeychestKeys
 print(Secrets.Global().clientID)
 print(Secrets.Debug().apiKey)
 print(Secrets.Release().apiKey)
+print(Secrets.Global().mapsApiKey)
 SWIFT
 
 ACTUAL="$(swift run --package-path consumer consumer)"
-EXPECTED="$(printf '%s\n%s\n%s' "$clientID" "$apiKeyDebug" "$apiKeyRelease")"
+EXPECTED="$(printf '%s\n%s\n%s\n%s' "$clientID" "$apiKeyDebug" "$apiKeyRelease" "$MAPS_API_KEY")"
 if [ "$ACTUAL" != "$EXPECTED" ]; then
   echo "FAIL: decoded values differ from originals" >&2
   exit 1

@@ -45,6 +45,46 @@ final class NamingTests: XCTestCase {
         }
     }
 
+    func testScreamingSnakeCaseBecomesCamelCase() {
+        let expected = [
+            "API_KEY": "apiKey",
+            "MAPS_API_KEY": "mapsApiKey",
+            "KEY": "key",
+            "ID": "id",
+            "AWS_S3_KEY": "awsS3Key",
+            "API_2FA": "api2Fa",
+            "API__KEY": "apiKey",
+            "KEY_": "key",
+        ]
+        for (key, property) in expected {
+            XCTAssertEqual(Naming.propertyName(key), property, key)
+            XCTAssertEqual(Naming.kotlinPropertyName(key), property, key)
+        }
+    }
+
+    func testKeysWithLowercaseLettersKeepTheirNames() {
+        let expected = [
+            "MySecretAPIKey": "mySecretAPIKey",
+            "apiKey": "apiKey",
+            "clientID": "clientID",
+            "My_Key": "my_Key",
+            "api_key": "api_key",
+            "Api_Key": "api_Key",
+            "A": "a",
+        ]
+        for (key, property) in expected {
+            XCTAssertEqual(Naming.propertyName(key), property, key)
+        }
+    }
+
+    func testConvertedNamesAreEscapedWhenTheyAreKeywords() {
+        XCTAssertEqual(Naming.propertyName("CLASS"), "`class`")
+        XCTAssertEqual(Naming.propertyName("DEFAULT"), "`default`")
+        XCTAssertEqual(Naming.kotlinPropertyName("OBJECT"), "`object`")
+        // `default` is a Swift keyword but an ordinary name in Kotlin.
+        XCTAssertEqual(Naming.kotlinPropertyName("DEFAULT"), "default")
+    }
+
     func testAccountNaming() {
         XCTAssertEqual(Naming.account(key: "apiKey", environment: "Debug"), "apiKeyDebug")
         XCTAssertEqual(Naming.account(key: "clientID", environment: nil), "clientID")

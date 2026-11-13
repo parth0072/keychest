@@ -40,15 +40,17 @@ public enum Naming {
         }
     }
 
-    /// Lowercases only the first character: `MySecretAPIKey` -> `mySecretAPIKey`.
+    /// The Swift property name for a key, in lowerCamelCase.
+    /// `MySecretAPIKey` -> `mySecretAPIKey` (only the first character changes);
+    /// `MAPS_API_KEY` -> `mapsApiKey` (SCREAMING_SNAKE_CASE is converted to camelCase).
     public static func propertyName(_ key: String) -> String {
-        let name = lowercasedFirst(key)
+        let name = baseName(key)
         return reserved.contains(name) ? "`\(name)`" : name
     }
 
     /// Same naming as `propertyName`, escaping Kotlin hard keywords instead of Swift ones.
     public static func kotlinPropertyName(_ key: String) -> String {
-        kotlinIdentifier(lowercasedFirst(key))
+        kotlinIdentifier(baseName(key))
     }
 
     /// Wraps a Kotlin hard keyword in backticks so it can be used as a name.
@@ -76,9 +78,28 @@ public enum Naming {
         }
     }
 
+    /// The unescaped property name shared by Swift and Kotlin. A key with no lowercase letters
+    /// (`API_KEY`, `KEY`) is SCREAMING_SNAKE_CASE and becomes camelCase. Every other key only has
+    /// its first character lowercased, so existing camelCase and PascalCase keys keep their names.
+    static func baseName(_ key: String) -> String {
+        let isScreaming = key.contains(where: \.isLetter) && key == key.uppercased()
+        return isScreaming ? camelCased(screaming: key) : lowercasedFirst(key)
+    }
+
     private static func lowercasedFirst(_ key: String) -> String {
         guard let first = key.first else { return key }
         return first.lowercased() + key.dropFirst()
+    }
+
+    /// `MAPS_API_KEY` -> `mapsApiKey`, `API_2FA` -> `api2Fa`.
+    private static func camelCased(screaming key: String) -> String {
+        let words = key.split(separator: "_").map { $0.lowercased() }
+        return words.prefix(1).joined() + words.dropFirst().map(capitalizingFirstLetter).joined()
+    }
+
+    private static func capitalizingFirstLetter(_ word: String) -> String {
+        guard let index = word.firstIndex(where: \.isLetter) else { return word }
+        return String(word[..<index]) + word[index].uppercased() + String(word[word.index(after: index)...])
     }
 
     /// Account name used in a backend for a secret scoped to an environment.

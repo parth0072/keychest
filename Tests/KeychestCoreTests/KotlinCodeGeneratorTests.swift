@@ -109,6 +109,15 @@ final class KotlinCodeGeneratorTests: XCTestCase {
         XCTAssertFalse(text.contains("object Debug"))
     }
 
+    func testScreamingSnakeCaseKeysBecomeCamelCaseProperties() throws {
+        let text = try source(generate(secrets: ["MAPS_API_KEY": "m", "API_TOKENDebug": "t"],
+                                       yaml: "backend: env\nenvironments: [Debug]\nenvironment_secrets: [API_TOKEN]\nglobal_secrets: [MAPS_API_KEY]"))
+        XCTAssertTrue(text.contains("val mapsApiKey: String"))
+        XCTAssertTrue(text.contains("override val apiToken: String"))
+        XCTAssertFalse(text.contains("mAPS_API_KEY"))
+        XCTAssertFalse(text.contains("aPI_TOKEN"))
+    }
+
     // MARK: - Round trip
 
     /// Reads the `\u00XX` escapes of a string expression back into bytes. The expression ends

@@ -123,7 +123,7 @@ kotlin:                           # used when platforms includes kotlin
   package: com.example.keys
 ```
 
-Names use ASCII letters, digits and underscores and start with a letter; `Global` is reserved. More in [`Examples/`](Examples).
+Names use ASCII letters, digits and underscores and start with a letter; `Global` is reserved. Properties are lowerCamelCase: `MySecretKey` becomes `mySecretKey` and `MAPS_API_KEY` becomes `mapsApiKey`. More in [`Examples/`](Examples).
 
 ## Commands
 

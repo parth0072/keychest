@@ -223,6 +223,8 @@ extension Config {
         }
         try Self.requireUnique(globalSecrets + environmentSecrets, label: "secret")
         try Self.requireUnique(environments, label: "environment")
+        try Self.requireUniqueProperties(globalSecrets)
+        try Self.requireUniqueProperties(environmentSecrets)
 
         if environments.contains("Global") {
             throw KeychestError.invalidConfig("'Global' is reserved and cannot be used as an environment name.")
@@ -262,6 +264,19 @@ extension Config {
         var seen = Set<String>()
         for name in names where !seen.insert(name).inserted {
             throw KeychestError.invalidConfig("Duplicate \(label) name '\(name)'.")
+        }
+    }
+
+    /// Two keys in the same scope must not become the same property, or the generated code would not compile.
+    /// Global and environment secrets live in different types, so they may share a property name.
+    private static func requireUniqueProperties(_ keys: [String]) throws {
+        var seen: [String: String] = [:]
+        for key in keys {
+            let property = Naming.baseName(key)
+            if let other = seen[property] {
+                throw KeychestError.invalidConfig("'\(other)' and '\(key)' both become the property '\(property)'. Rename one of them.")
+            }
+            seen[property] = key
         }
     }
 

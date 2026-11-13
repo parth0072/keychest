@@ -108,6 +108,25 @@ final class ConfigTests: XCTestCase {
         }
     }
 
+    func testRejectsKeysThatBecomeTheSameProperty() {
+        for global in ["[API_KEY, apiKey]", "[Foo, foo]", "[API_KEY, API__KEY]"] {
+            XCTAssertThrowsError(try Config.parse("backend: env\nglobal_secrets: \(global)"), global)
+        }
+        XCTAssertThrowsError(try Config.parse("backend: env\nenvironments: [Debug]\nenvironment_secrets: [API_KEY, apiKey]"))
+    }
+
+    func testCollisionMessageNamesBothKeys() {
+        XCTAssertThrowsError(try Config.parse("backend: env\nglobal_secrets: [API_KEY, apiKey]")) { error in
+            XCTAssertEqual(error as? KeychestError,
+                           .invalidConfig("'API_KEY' and 'apiKey' both become the property 'apiKey'. Rename one of them."))
+        }
+    }
+
+    func testGlobalAndEnvironmentSecretsMayShareAPropertyName() {
+        // They live in different generated types, so the names cannot clash.
+        XCTAssertNoThrow(try Config.parse("backend: env\nenvironments: [Debug]\nenvironment_secrets: [API_KEY]\nglobal_secrets: [apiKey]"))
+    }
+
     func testMissingFileReportsNotFound() {
         XCTAssertThrowsError(try Config.load(from: "/definitely/not/here.yml")) { error in
             XCTAssertEqual(error as? KeychestError, .configNotFound("/definitely/not/here.yml"))
