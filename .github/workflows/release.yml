@@ -1,0 +1,34 @@
+name: Release
+
+# Attaches a prebuilt universal macOS binary to a GitHub release, so installing Keychest does not
+# need Xcode. It runs when a release is published, and can be run by hand to build the binary for
+# a release that already exists (the tag may be older than this workflow).
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build and upload to, for example v1.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  macos-binary:
+    runs-on: macos-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # This checkout has the packaging script; the next one is the source that gets released.
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          path: source
+      - name: Build, package and check
+        run: Scripts/package-release.sh "$TAG" source
+      - name: Attach to the release
+        run: gh release upload "$TAG" dist/*.tar.gz dist/*.sha256 --clobber
