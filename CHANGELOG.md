@@ -10,6 +10,9 @@ All notable changes are documented here. The format follows
 - `Examples/keychest-sample-android`: an Android app that uses the generated Kotlin module with Android Gradle plugin 9.5. It builds in debug and release (R8) and has been run on an emulator.
 - `Scripts/e2e-android.sh` and a CI job that build the sample and check that no plaintext secret ends up in the APKs.
 
+### Changed
+- Rewrote the README around one setup path with a short section each for iOS and Android. Commands, config options, backends and CI moved to `docs/REFERENCE.md`.
+
 ## [1.2.0] - 2026-11-13
 
 ### Added

@@ -1,182 +1,129 @@
 # Keychest
 
-**Keep app secrets out of your repo and your project folder.**
+**Keep API keys out of your git repo, for iOS and Android apps.**
 
-Keychest pulls API keys from the macOS Keychain (or 1Password, or CI environment variables) at build time and generates a small Swift package (or a Kotlin module for Android) your app imports. Real values never touch git, and there is no `.env` file for editors, scripts or AI assistants to find.
+You store each secret once, in your Mac's Keychain. Keychest turns them into a small Swift package (iOS) or Kotlin module (Android) that your app imports. Your repo only contains the key *names*, never the values.
 
 ```swift
-import KeychestKeys
-
-let client = APIClient(key: Secrets.Release().apiKey)
+let key = Secrets.Release().apiKey   // iOS
 ```
 
-> **Work in progress.** Keychest is still young, so you may hit bugs or things that don't work yet. If something breaks, please [open an issue](https://github.com/parth0072/keychest/issues/new/choose) with the command you ran and the error output (never paste real secret values) and we'll take a look.
+```kotlin
+val key = Secrets.Release.apiKey     // Android
+```
 
-> **Know the limits.** Anything shipped inside an app can be extracted by a determined attacker. Keychest obfuscates values so they don't show up in `strings`, but its real value is keeping secrets out of your source tree and git history. See the [threat model](docs/THREAT_MODEL.md).
+> **Early release.** You may hit bugs. If something breaks, please [open an issue](https://github.com/parth0072/keychest/issues/new/choose) with the command you ran and the error (never paste real secret values).
 
-## Quick start
+> **Know the limits.** Anything inside an app can be extracted by a determined attacker. Keychest keeps secrets out of your repo, not out of your app. See the [threat model](docs/THREAT_MODEL.md).
 
-Install with [Homebrew](https://brew.sh). It downloads a prebuilt universal binary (macOS 12+), so you don't need Xcode:
+## Install
 
 ```bash
 brew install parth0072/tap/keychest
 ```
 
-or download `keychest-<version>-macos-universal.tar.gz` from the [latest release](https://github.com/parth0072/keychest/releases/latest), unpack it and put `keychest` on your `PATH` (if macOS blocks a binary downloaded in a browser, run `xattr -d com.apple.quarantine keychest` once), or build from source (macOS 12+, Swift 5.9+):
+It downloads a prebuilt binary for macOS 12 or newer, so you don't need Xcode. You can also [download it](https://github.com/parth0072/keychest/releases/latest) (if macOS blocks a browser download, run `xattr -d com.apple.quarantine keychest` once) or build from source with Swift 5.9+.
+
+## 1. Set up (iOS and Android)
+
+In your app's folder:
 
 ```bash
-git clone https://github.com/parth0072/keychest.git && cd keychest
-swift build -c release && cp .build/release/keychest /usr/local/bin/
+keychest init
 ```
 
-Then, in your app's folder:
-
-```bash
-keychest init             # writes .keychest.yml (key names only, safe to commit)
-keychest set apiKey       # hidden prompt, once per environment
-keychest check            # confirms every secret exists; never prints values
-keychest generate         # writes ./KeychestKeys (git-ignored)
-```
-
-Add `KeychestKeys` to Xcode as a local package (*File → Add Package Dependencies… → Add Local…*), then:
-
-```swift
-Secrets.Debug().apiKey            // per-environment secret
-Secrets.Global().analyticsToken   // shared by every environment
-```
-
-A complete SwiftUI app is in [`Examples/keychest-sample`](Examples/keychest-sample).
-
-Re-run `keychest generate` whenever a secret changes. For tests, depend on the generated protocol instead of the concrete type:
-
-```swift
-func makeClient(_ secrets: SecretsEnvironmentProtocol) -> APIClient { APIClient(key: secrets.apiKey) }
-struct FakeSecrets: SecretsEnvironmentProtocol { let apiKey = "test-key" }
-```
-
-## Android
-
-The same `.keychest.yml` can also generate a Kotlin module for Android (or any JVM) projects. Choose the platform and, optionally, where the module goes:
+This creates `.keychest.yml`. Edit it to list your secret names. Names only, so it is safe to commit:
 
 ```yaml
-platforms: [swift, kotlin]   # or just [kotlin]
-kotlin:
-  path: keychest-keys
-  package: com.example.keys
+service: com.yourcompany.yourapp   # any unique name
+environments: [Debug, Release]
+environment_secrets: [apiKey]      # a different value per environment
+global_secrets: [clientID]         # the same value everywhere
 ```
 
-Run `keychest generate`, then add the module to your Gradle build:
+Then store the values. Typing is hidden:
+
+```bash
+keychest set apiKey      # asks for the Debug value, then the Release value
+keychest set clientID
+```
+
+## 2a. iOS
+
+```bash
+keychest generate
+```
+
+This creates a `KeychestKeys/` folder. In Xcode, choose **File → Add Package Dependencies… → Add Local…** and pick it. Then:
+
+```swift
+import KeychestKeys
+
+let key = Secrets.Debug().apiKey      // different per environment
+let id = Secrets.Global().clientID    // same everywhere
+```
+
+Try the [iOS sample app](Examples/keychest-sample).
+
+## 2b. Android
+
+Add this to `.keychest.yml`, with your own package name:
+
+```yaml
+platforms: [kotlin]
+kotlin:
+  package: com.yourcompany.yourapp.keys
+```
+
+```bash
+keychest generate
+```
+
+This creates a `keychest-keys/` module. Add it to your Gradle build:
 
 ```kotlin
 // settings.gradle.kts
 include(":keychest-keys")
 
+// build.gradle.kts (root), inside plugins { }
+id("org.jetbrains.kotlin.jvm") version "2.4.21" apply false   // or your Kotlin version
+
 // app/build.gradle.kts
+android { buildFeatures { buildConfig = true } }
 dependencies { implementation(project(":keychest-keys")) }
 ```
 
-The module applies the Kotlin plugin without a version, so declare it once in your root `build.gradle.kts`, for example `id("org.jetbrains.kotlin.jvm") version "2.4.21" apply false` (use your project's Kotlin version if it has one; Android Gradle plugin 9 has built-in Kotlin, so a new project may not). Then use it like the Swift one:
+Then:
 
 ```kotlin
-import com.example.keys.Secrets
-import com.example.keys.SecretsEnvironment
+import com.yourcompany.yourapp.keys.Secrets
 
-val secrets: SecretsEnvironment = if (BuildConfig.DEBUG) Secrets.Debug else Secrets.Release
-val apiKey = secrets.apiKey
-val clientID = Secrets.Global.clientID
+val key = if (BuildConfig.DEBUG) Secrets.Debug.apiKey else Secrets.Release.apiKey
+val id = Secrets.Global.clientID
 ```
 
-`BuildConfig` needs `buildFeatures { buildConfig = true }` on recent Android Gradle plugins. Values are obfuscated, not encrypted: tools such as jadx can recover them from an APK.
+Try the [Android sample app](Examples/keychest-sample-android). Building both apps from one repo? Use `platforms: [swift, kotlin]`.
 
-A complete Android app that does all of this is in [`Examples/keychest-sample-android`](Examples/keychest-sample-android).
+## Good to know
 
-## How it works
-
-```
-Keychain / 1Password / env  ──▶  keychest generate  ──▶  KeychestKeys (Swift package)
-real values, never in git        XOR + random salt        decoded on access in your app
-```
-
-`.keychest.yml` lists secret *names* only. Each run uses a fresh random salt, and the generated code has no dependencies.
-
-## Configuration
-
-```yaml
-backend: keychain                 # keychain | env | 1password
-service: com.example.myapp        # Keychain service name
-
-# onepassword:                    # for backend: 1password
-#   vault: Development
-#   item: MyApp
-
-environments: [Debug, Release]
-environment_secrets: [apiKey]     # stored as apiKeyDebug, apiKeyRelease
-global_secrets: [analyticsToken]  # stored as analyticsToken
-
-output:                           # optional
-  path: KeychestKeys
-  package_name: KeychestKeys      # what you `import`
-  type_name: Secrets
-  gitignore: true
-
-platforms: [swift]                # swift, kotlin or both
-kotlin:                           # used when platforms includes kotlin
-  path: keychest-keys
-  package: com.example.keys
-```
-
-Names use ASCII letters, digits and underscores and start with a letter; `Global` is reserved. Properties are lowerCamelCase: `MySecretKey` becomes `mySecretKey` and `MAPS_API_KEY` becomes `mapsApiKey`. More in [`Examples/`](Examples).
-
-## Commands
-
-| Command | What it does |
-| --- | --- |
-| `keychest init` | Create a starter `.keychest.yml` (`--force` to overwrite). |
-| `keychest set <name> [-e Env]` | Store a secret via a hidden prompt, or `--stdin` for scripts. The value is never a command-line argument. |
-| `keychest remove <name> [-e Env]` | Delete a secret from the backend. |
-| `keychest check` | List present and missing secrets. Exits `1` if any are missing. |
-| `keychest generate [--platforms swift,kotlin] [--output DIR]` | Fetch secrets and write the Swift package and/or Kotlin module. Reports every missing secret at once. |
-
-`check` and `generate` take `--environments Debug,Release` to limit which environments are read, which keeps Release secrets off developer machines. Every command takes `-c/--config <path>`.
-
-## Backends
-
-| Backend | Read | Write | Notes |
-| --- | :-: | :-: | --- |
-| `keychain` | ✅ | ✅ | macOS login keychain. macOS may ask for permission the first time. |
-| `env` | ✅ | – | Reads variables such as `$apiKeyRelease`. Meant for CI; also works on Linux. |
-| `1password` | ✅ | – | Reads `op://<vault>/<item>/<account>` with the signed-in `op` CLI. |
-
-To add one, conform to [`SecretBackend`](Sources/KeychestCore/SecretBackend.swift); see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## CI and Xcode
-
-On CI, use the `env` backend with the same key names:
-
-```yaml
-- run: keychest generate --config ci.keychest.yml --environments Release
-  env:
-    apiKeyRelease: ${{ secrets.API_KEY_RELEASE }}
-    analyticsToken: ${{ secrets.ANALYTICS_TOKEN }}
-```
-
-In Xcode, run `keychest generate` before building (terminal, fastlane or a pre-build step). Inside a Run Script phase, User Script Sandboxing can block Keychain access.
-
-## Security
-
-Keychest protects against secrets being committed, shared by accident or read from your source tree. It does not make them unrecoverable from a shipped app, so keep truly sensitive credentials on a server. The generated folder holds the encoded values next to their salt: keep it git-ignored (the default) and out of reach of AI assistants, as described in [docs/AI_ASSISTANTS.md](docs/AI_ASSISTANTS.md). Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
+- **Run `keychest generate` again** when a secret changes. The generated folders are git-ignored, so after cloning, each developer runs `keychest set` and `keychest generate` once.
+- **Tests:** use the generated `SecretsEnvironmentProtocol` (Swift) or `SecretsEnvironment` (Kotlin) in your code, so a test can pass in a fake.
+- **Xcode:** run `keychest generate` before building, not in a Run Script phase, because its sandbox can block the Keychain.
+- **CI** has no Keychain: use the `env` backend, as shown in the [reference](docs/REFERENCE.md#ci).
+- **More:** all commands, config options and backends are in the [reference](docs/REFERENCE.md). The generated folders hold the encoded values next to their salt, so keep them out of reach of AI assistants ([guide](docs/AI_ASSISTANTS.md)). To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-Planned, with no dates yet. Ideas and PRs are welcome.
+**Done:** Swift and Kotlin output, Keychain, 1Password and env backends, a prebuilt macOS binary with Homebrew install, and iOS and Android sample apps.
 
-- **More Android support** (Kotlin output and a sample app are already here)
-  - Map Android build types and product flavors to Keychest environments, so one `.keychest.yml` can serve iOS and Android
-  - A Gradle task that runs `keychest generate` before builds
-- White-label flavors
-- Touch ID–gated Keychain items
-- More backends (Bitwarden, Vault, AWS)
-- Prebuilt Linux binaries
+**Next** (no dates yet; ideas and PRs are welcome):
+
+- **Android Gradle plugin:** run `keychest generate` before builds, and feed secrets to `BuildConfig` and manifest placeholders (for keys such as a Maps API key)
+- **Build flavors:** white-label apps, and Android build types and flavors mapped to Keychest environments
+- **CI-friendly names:** variables like `API_KEY_DEBUG` for per-environment secrets (today they are `API_KEYDebug`)
+- **Touch ID–protected** Keychain items
+- **More backends:** Bitwarden, Vault, AWS
+- **Prebuilt Linux binaries**
 
 ## Contributing
 

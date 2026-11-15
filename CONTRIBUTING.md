@@ -30,7 +30,7 @@ Scripts/e2e.sh          end-to-end check used by CI
 Scripts/e2e-kotlin.sh   end-to-end check for the Kotlin output, used by CI
 Scripts/e2e-android.sh  end-to-end check for the Android sample, used by CI
 Scripts/package-release.sh builds the universal release binary, used by the Release workflow
-docs/                   threat model, assistant guidance
+docs/                   reference, threat model, assistant guidance
 Examples/               sample configs, an Xcode sample app and an Android sample app
 ```
 
