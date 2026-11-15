@@ -1,0 +1,9 @@
+[versions]
+agp = "9.5.1"
+kotlin = "2.4.21"
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+# Android Gradle plugin 9 has built-in Kotlin, so the Android modules need no Kotlin plugin.
+# This one is only for the generated keychest-keys module, which is a plain Kotlin/JVM module.
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

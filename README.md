@@ -75,7 +75,7 @@ include(":keychest-keys")
 dependencies { implementation(project(":keychest-keys")) }
 ```
 
-The module applies the Kotlin plugin without a version, so declare it once in your root `build.gradle.kts`: `id("org.jetbrains.kotlin.jvm") version "<your Kotlin version>" apply false`. Then use it like the Swift one:
+The module applies the Kotlin plugin without a version, so declare it once in your root `build.gradle.kts`, for example `id("org.jetbrains.kotlin.jvm") version "2.4.21" apply false` (use your project's Kotlin version if it has one; Android Gradle plugin 9 has built-in Kotlin, so a new project may not). Then use it like the Swift one:
 
 ```kotlin
 import com.example.keys.Secrets
@@ -87,6 +87,8 @@ val clientID = Secrets.Global.clientID
 ```
 
 `BuildConfig` needs `buildFeatures { buildConfig = true }` on recent Android Gradle plugins. Values are obfuscated, not encrypted: tools such as jadx can recover them from an APK.
+
+A complete Android app that does all of this is in [`Examples/keychest-sample-android`](Examples/keychest-sample-android).
 
 ## How it works
 
@@ -168,8 +170,7 @@ Keychest protects against secrets being committed, shared by accident or read fr
 
 Planned, with no dates yet. Ideas and PRs are welcome.
 
-- **More Android support** (Kotlin output is already here)
-  - A sample Android app
+- **More Android support** (Kotlin output and a sample app are already here)
   - Map Android build types and product flavors to Keychest environments, so one `.keychest.yml` can serve iOS and Android
   - A Gradle task that runs `keychest generate` before builds
 - White-label flavors

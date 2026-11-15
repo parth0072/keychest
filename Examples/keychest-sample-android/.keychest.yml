@@ -1,0 +1,13 @@
+# Keychest configuration for the Android sample. It lists key NAMES only, never values.
+backend: keychain
+service: com.example.myapp   # same Keychain service as the iOS sample, so one `keychest set` serves both
+
+platforms: [kotlin]
+
+environments: [Debug, Release]
+environment_secrets: [apiKey]     # stored as apiKeyDebug, apiKeyRelease
+global_secrets: [clientID]
+
+kotlin:
+  path: keychest-keys
+  package: dev.keychest.sample.keys

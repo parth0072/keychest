@@ -11,6 +11,7 @@ swift build
 swift test
 Scripts/e2e.sh        # generate -> compile -> verify round trip
 Scripts/e2e-kotlin.sh # Kotlin: generate -> Gradle build -> verify (needs a JDK and Gradle)
+Scripts/e2e-android.sh # Android sample: generate -> build APKs -> verify (needs the Android SDK)
 ```
 
 The Keychain backend only compiles and runs on macOS. Everything else (config, obfuscation, code generation, env backend) is covered by tests that also run on Linux. To exercise the real keychain locally:
@@ -27,9 +28,10 @@ Sources/keychest/       command-line interface (swift-argument-parser)
 Tests/KeychestCoreTests unit tests, in-memory backend for fakes
 Scripts/e2e.sh          end-to-end check used by CI
 Scripts/e2e-kotlin.sh   end-to-end check for the Kotlin output, used by CI
+Scripts/e2e-android.sh  end-to-end check for the Android sample, used by CI
 Scripts/package-release.sh builds the universal release binary, used by the Release workflow
 docs/                   threat model, assistant guidance
-Examples/               sample configs and an Xcode sample app
+Examples/               sample configs, an Xcode sample app and an Android sample app
 ```
 
 ## Adding a backend
