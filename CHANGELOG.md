@@ -9,9 +9,15 @@ All notable changes are documented here. The format follows
 ### Added
 - `Examples/keychest-sample-android`: an Android app that uses the generated Kotlin module with Android Gradle plugin 9.5. It builds in debug and release (R8) and has been run on an emulator.
 - `Scripts/e2e-android.sh` and a CI job that build the sample and check that no plaintext secret ends up in the APKs.
+- `docs/PRODUCTION.md`: what belongs in an app, keeping environments apart, protecting the generated folders, and installing Keychest safely.
+- Signed build provenance for release archives (from the next release on), Dependabot for the Swift package, GitHub Actions and the Android sample, and a pull request template.
 
 ### Changed
 - Rewrote the README around one setup path with a short section each for iOS and Android. Commands, config options, backends and CI moved to `docs/REFERENCE.md`.
+- Updated Yams to 6.2.2. GitHub Actions are pinned to commit SHAs, and CI runs with a read-only token.
+
+### Security
+- Generated files and folders are now owner-only (0600 and 0700), and the output folder is excluded from backups on macOS. Before, every user on the Mac could read them.
 
 ## [1.2.0] - 2026-11-13
 

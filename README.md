@@ -106,6 +106,7 @@ Try the [Android sample app](Examples/keychest-sample-android). Building both ap
 
 ## Good to know
 
+- **Going live?** Read [Using Keychest in production](docs/PRODUCTION.md) first: what belongs in an app, keeping environments apart, and protecting the generated folders.
 - **Run `keychest generate` again** when a secret changes. The generated folders are git-ignored, so after cloning, each developer runs `keychest set` and `keychest generate` once.
 - **Tests:** use the generated `SecretsEnvironmentProtocol` (Swift) or `SecretsEnvironment` (Kotlin) in your code, so a test can pass in a fake.
 - **Xcode:** run `keychest generate` before building, not in a Run Script phase, because its sandbox can block the Keychain.

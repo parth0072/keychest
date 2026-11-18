@@ -11,13 +11,17 @@ Keychest is a convenience and hygiene tool. It is deliberately honest about what
 | Secrets visible in shell history or process lists | `keychest set` prompts with echo off and never takes the value as an argument. |
 | Casual extraction with `strings` on a built app | Values are XOR-obfuscated with a random per-run salt. |
 | Release secrets present on developer laptops | `--environments` generates only the environments a machine needs. |
+| Other users on the same Mac reading the generated files | Generated folders are owner-only (0700) and the files are 0600. |
+| Generated secrets landing in Time Machine backups | The generated folder is excluded from backups on macOS. |
 
 ## What Keychest does **not** protect against
 
 - **A determined attacker with your app.** The decoder and salt ship in the binary. Anyone with a debugger, Frida or a disassembler can recover the values. XOR is obfuscation, not encryption. This is true of every client-side secret scheme, including Arkana and cocoapods-keys.
 - **A decompiled Android app.** The Kotlin decoder and salt ship in the app's dex files, and tools such as jadx can recover the values. Code shrinking and renaming with R8 do not change that.
 - **Malware or a malicious process running as you.** Any process running as your user can ask the Keychain for items once it is unlocked (macOS may prompt, depending on the item's access control).
-- **The generated folder.** It contains the encoded values and the salt side by side, so anyone who can read it can decode it. Treat it like a secret: git-ignored, not shared, and denied to AI tools.
+- **The generated folder.** It contains the encoded values and the salt side by side, so anyone who can read it can decode it. It is owner-only and excluded from macOS backups, but a process running as you, a sync service such as iCloud Drive, or someone with your disk can still read it. Treat it like a secret: git-ignored, not shared, and denied to AI tools.
+- **Every environment in one build.** By default the generated code contains the secrets of all environments, so a Debug build ships your Release key. Generate only what each build needs with `--environments`.
+- **A malicious `.keychest.yml`.** It decides which Keychain service or 1Password item Keychest reads and where it writes. Treat it like a build script, and only run Keychest on repositories you trust.
 - **Compromised CI.** Whoever controls the CI job can read the secrets it injects.
 - **Revocation.** If a secret leaks, rotate it. Keychest cannot un-leak anything.
 
@@ -26,4 +30,5 @@ Keychest is a convenience and hygiene tool. It is deliberately honest about what
 1. Prefer short-lived or scoped keys over powerful long-lived ones.
 2. Never embed anything that would be catastrophic if extracted (payment secrets, database credentials, signing keys). Put those behind your own server.
 3. Rotate any secret that was ever committed or pasted into a tool.
-4. Keep the generated folder out of version control and backups you don't control.
+4. Keep the generated folder out of version control, synced folders and backups you don't control.
+5. Read [Using Keychest in production](PRODUCTION.md) before you ship.
