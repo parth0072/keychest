@@ -13,7 +13,10 @@ on:
         required: true
 
 permissions:
-  contents: write
+  contents: write           # upload the assets to the release
+  id-token: write           # sign the build provenance with this workflow's identity
+  attestations: write       # store the provenance attestation
+  artifact-metadata: write  # required by actions/attest
 
 jobs:
   macos-binary:
@@ -23,12 +26,18 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       # This checkout has the packaging script; the next one is the source that gets released.
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ env.TAG }}
           path: source
       - name: Build, package and check
         run: Scripts/package-release.sh "$TAG" source
+      # Signed build provenance: anyone can check that an archive was built by this workflow from
+      # this repository with `gh attestation verify <file> -R parth0072/keychest`.
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/*.tar.gz
       - name: Attach to the release
         run: gh release upload "$TAG" dist/*.tar.gz dist/*.sha256 --clobber

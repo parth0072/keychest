@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Keep the pinned GitHub Actions current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # Swift packages Keychest depends on.
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The Android sample's Gradle and Android Gradle plugin versions.
+  - package-ecosystem: gradle
+    directory: /Examples/keychest-sample-android
+    schedule:
+      interval: weekly
