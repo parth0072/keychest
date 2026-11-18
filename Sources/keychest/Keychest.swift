@@ -7,7 +7,7 @@ struct Keychest: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "keychest",
         abstract: "Keep app secrets out of your repo. Pull them from Keychain (or 1Password, or env vars) and generate obfuscated Swift accessors at build time.",
-        version: "1.2.0",
+        version: "1.2.1",
         subcommands: [Init.self, Set.self, Remove.self, Generate.self, Check.self]
     )
 }
